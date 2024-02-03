@@ -3,4 +3,4 @@ from pydantic import AnyUrl
 
 
 class BaseDatabaseSettings(BaseSettings):
-    dns_base: AnyUrl
+    db_dsn: AnyUrl
