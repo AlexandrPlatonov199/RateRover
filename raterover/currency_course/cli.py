@@ -3,8 +3,9 @@ import asyncio
 import typer
 from loguru import logger
 
-from . import api, database
+from . import api, database, broker
 from .broker.producer_service import get_service as get_service_producer
+from .broker.consumer_service import get_service as get_service_consumer
 from .service import get_service
 from .settings import CurrencyCourseSettings, get_settings
 from ..common.binance import get_binance_course
@@ -24,7 +25,14 @@ def run(ctx: typer.Context):
         binance_service=binance_service,
         broker_producer=broker_producer
     )
-    currency_course_service = get_service(api=api_service, broker_producer=broker_producer)
+    broker_consumer = get_service_consumer(
+        loop=loop,
+        database=database_service,
+        settings=settings,
+    )
+    currency_course_service = get_service(api=api_service,
+                                          broker_producer=broker_producer,
+                                          broker_consumer=broker_consumer)
 
     loop.run_until_complete(currency_course_service.run())
 
@@ -42,6 +50,7 @@ def get_cli() -> typer.Typer:
     cli.callback()(settings_callback)
     cli.command(name="run")(run)
     cli.add_typer(api.get_cli(), name="api")
+    cli.add_typer(broker.get_cli(), name="broker")
     cli.add_typer(database.get_cli(), name="database")
 
     return cli

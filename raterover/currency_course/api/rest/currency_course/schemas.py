@@ -6,7 +6,7 @@ class BaseSymbol(str,enum.Enum):
     BTC = "btcusdt"
     ETH = "ethusdt"
     USDTTRC = "usdttrcusdt"
-    USDTERC = "usdtethusdt"
+    USDTERC = "usdtercusdt"
 
 
 class Course(BaseModel):

@@ -27,7 +27,7 @@ def run(ctx: typer.Context):
 
     loop.run_until_complete(api_service.run())
 
-    # asyncio.run(api_service.run())
+
 
 
 def get_cli() -> typer.Typer:

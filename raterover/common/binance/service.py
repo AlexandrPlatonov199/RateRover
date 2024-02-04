@@ -17,23 +17,20 @@ class BinanceService(ServiceMixin):
         self.uri = uri
         logger.info(self.uri)
 
-    @backoff.on_exception(backoff.expo, HTTPError, max_tries=3, raise_on_giveup=False)
+
     async def get_price_feed(self, base_symbol):
-        while True:
-            async with websockets.connect(self.uri) as websocket:
-                response = await websocket.recv()
-                data = json.loads(response)
+        ws_uri = self.uri + f"{base_symbol}@trade"
+        async with websockets.connect(ws_uri) as websocket:
+            response = await websocket.recv()
+            data = json.loads(response)
 
-                for res in data:
-                    if res["s"] == base_symbol:
-                        result = {
-                            "exchanger": "binance",
-                            "direction": res["s"],
-                            "value": float(res['c'])
-
-                        }
-
-
+            result = {
+                    "exchanger": "binance",
+                    "direction": data["s"],
+                    "value": float(data['p'])
+            }
+            print(result)
+            return result
 
 
 def get_binance_course(settings: BaseBinanceSettings) -> BinanceService:

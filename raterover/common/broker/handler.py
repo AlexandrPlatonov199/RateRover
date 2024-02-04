@@ -1,12 +1,12 @@
-from typing import Iterable
 import aio_pika
+from typing import Iterable
 
 class BaseBrokerHandler:
-    def __init__(self, queues: Iterable[str] | None = None):
-        self._queues = queues
+    def __init__(self, queues_name: str | None = None):
+        self._queue_name = queues_name
 
     async def check(self, message: aio_pika.IncomingMessage) -> bool:
-        if self._queues is not None and message.routing_key not in self._queues:
+        if self._queue_name is not None and message.routing_key not in self._queue_name:
             return False
 
         return await self.custom_check(message=message)
