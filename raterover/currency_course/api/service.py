@@ -11,14 +11,14 @@ from raterover.currency_course.settings import CurrencyCourseSettings
 from . import health, router
 from ..broker.producer_service import CourseBrokerProducerService
 
-from ...common.binance import BinanceService
+from ...common.request_course import RequestService
 
 
 class CurrencyCourseAPIService(BaseAPIService):
     def __init__(
             self,
             database: CurrencyCourseDatabaseService,
-            binance_service: BinanceService,
+            request_service: RequestService,
             broker_producer: CourseBrokerProducerService,
             version: str = "0.0.0",
             port: int = 8000,
@@ -28,7 +28,7 @@ class CurrencyCourseAPIService(BaseAPIService):
 
     ):
         self._database = database
-        self._binance_service = binance_service
+        self._request_service = request_service
         self._broker_producer = broker_producer
 
         super().__init__(
@@ -48,7 +48,7 @@ class CurrencyCourseAPIService(BaseAPIService):
     def dependencies(self) -> list[ServiceMixin]:
         return [
             self._database,
-            self._binance_service,
+            self._request_service,
         ]
 
     @property
@@ -56,8 +56,8 @@ class CurrencyCourseAPIService(BaseAPIService):
         return self._database
 
     @property
-    def binance(self) -> BinanceService:
-        return self._binance_service
+    def request_service(self) -> RequestService:
+        return self._request_service
 
     @property
     def broker_producer(self) -> CourseBrokerProducerService:
@@ -67,12 +67,12 @@ class CurrencyCourseAPIService(BaseAPIService):
 def get_service(
         database: CurrencyCourseDatabaseService,
         settings: CurrencyCourseSettings,
-        binance_service: BinanceService,
+        request_service: RequestService,
         broker_producer: CourseBrokerProducerService,
 ) -> CurrencyCourseAPIService:
     return CurrencyCourseAPIService(
         database=database,
-        binance_service=binance_service,
+        request_service=request_service,
         broker_producer=broker_producer,
         version="0.0.0",
         port=settings.port,

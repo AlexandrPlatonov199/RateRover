@@ -6,8 +6,10 @@ authors = ["Alexander Platonov <sasa20sasha19910@yandex.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
+# extras
 asyncpg = { version = "^0.28.0", optional = true }
 
+# main
 python = "^3.11"
 pydantic-settings = "^2.1.0"
 fastapi = "^0.109.0"

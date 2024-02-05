@@ -8,7 +8,7 @@ from .broker.producer_service import get_service as get_service_producer
 from .broker.consumer_service import get_service as get_service_consumer
 from .service import get_service
 from .settings import CurrencyCourseSettings, get_settings
-from ..common.binance import get_binance_course
+from ..common.request_course import get_request_service
 
 
 @logger.catch
@@ -17,12 +17,12 @@ def run(ctx: typer.Context):
 
     loop = asyncio.get_event_loop()
     database_service = database.get_service(settings=settings)
-    binance_service = get_binance_course(settings=settings)
+    request_service = get_request_service(settings=settings)
     broker_producer = get_service_producer(loop=loop, settings=settings)
     api_service = api.get_service(
         database=database_service,
         settings=settings,
-        binance_service=binance_service,
+        request_service=request_service,
         broker_producer=broker_producer
     )
     broker_consumer = get_service_consumer(

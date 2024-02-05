@@ -8,7 +8,7 @@ from raterover.currency_course import database
 from raterover.currency_course.settings import CurrencyCourseSettings
 
 from .service import get_service
-from ...common.binance import get_binance_course
+from ...common.request_course import get_request_service
 
 
 @logger.catch
@@ -16,12 +16,12 @@ def run(ctx: typer.Context):
     settings: CurrencyCourseSettings = ctx.obj["settings"]
     loop = asyncio.get_event_loop()
     database_service = database.get_service(settings=settings)
-    binance_service = get_binance_course(settings=settings)
+    request_service = get_request_service(settings=settings)
     broker_producer = get_producer_service(loop=loop, settings=settings)
     api_service = get_service(
         database=database_service,
         settings=settings,
-        binance_service=binance_service,
+        request_service=request_service,
         broker_producer=broker_producer,
     )
 

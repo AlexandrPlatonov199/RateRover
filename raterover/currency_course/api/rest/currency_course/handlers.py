@@ -3,7 +3,7 @@ from loguru import logger
 import fastapi
 from fastapi.responses import RedirectResponse
 
-from raterover.common.binance import BinanceService
+from raterover.common.request_course import RequestService
 from raterover.currency_course.api.rest.schemas import CurrencyCourseResponse
 from raterover.currency_course.broker.producer_service import CourseBrokerProducerService
 
@@ -14,7 +14,7 @@ from raterover.currency_course.database.service import CurrencyCourseDatabaseSer
 
 
 
-from .schemas import CourseResponseModel, BaseSymbol, CourseListFiltersRequest, Course
+from .schemas import CourseResponseModel, BaseSymbol, Course, CurrencyPair
 
 router = fastapi.APIRouter()
 
@@ -23,16 +23,17 @@ router = fastapi.APIRouter()
 async def get_course(
         request: fastapi.Request,
         base_symbol: BaseSymbol,
+        currency_pair: CurrencyPair,
 ) -> CourseResponseModel:
-    base_symbol = base_symbol.value.lower()
+    base_symbol = base_symbol.value
+    currency_pair = currency_pair.value
     print(base_symbol)
 
-
-    binance_service:  BinanceService = request.app.service.binance
+    request_service:  RequestService = request.app.service.request_service
     database_service: CurrencyCourseDatabaseService = request.app.service.database
     broker_producer: CourseBrokerProducerService = request.app.service.broker_producer
 
-    coros = await asyncio.create_task(binance_service.get_price_feed(base_symbol))
+    coros = await request_service.get_price_feed(base_symbol, currency_pair)
 
     await broker_producer.send_create_course(coros)
 

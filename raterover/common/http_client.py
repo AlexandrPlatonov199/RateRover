@@ -7,13 +7,15 @@ from facet import ServiceMixin
 class HTTPClient(httpx.AsyncClient, ServiceMixin):
     def __init__(
             self,
-            base_url: str = "",
+            base_url_binance: str = "",
+            base_url_coingecko: str = "",
             verify: bool = True,
     ):
-        super().__init__(base_url=base_url, verify=verify)
+        super().__init__(
+                         verify=verify,)
 
     async def start(self):
-        await self.__aenter__()  # pylint: disable=unnecessary-dunder-call
+        await self.__aenter__()
 
     async def stop(self):
-        await self.__aexit__()  # pylint: disable=unnecessary-dunder-call
+        await self.__aexit__()

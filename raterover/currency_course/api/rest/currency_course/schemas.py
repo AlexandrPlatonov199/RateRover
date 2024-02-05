@@ -2,11 +2,14 @@ from pydantic import BaseModel
 import enum
 
 
-class BaseSymbol(str,enum.Enum):
-    BTC = "btcusdt"
-    ETH = "ethusdt"
-    USDTTRC = "usdttrcusdt"
-    USDTERC = "usdtercusdt"
+class BaseSymbol(str, enum.Enum):
+    BTC = "BTC"
+    ETH = "ETH"
+
+
+class CurrencyPair(str, enum.Enum):
+    RUB = "RUB"
+    USD = "USD"
 
 
 class Course(BaseModel):
@@ -19,8 +22,4 @@ class CourseResponseModel(BaseModel):
     courses: list[Course]
 
 
-class CourseListFiltersRequest(BaseModel):
-    exchanger: str
-    direction: str
-    value: float
 
