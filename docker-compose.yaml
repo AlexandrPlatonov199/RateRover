@@ -9,21 +9,20 @@ services:
       - .env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
-    ports:
-      - 5432:5432
+
 
   currency_course:
-    image: ${RATEROVER_IMAGE:-raterover}
-    build:
-      context: .
+    build: .
     container_name: currency_course_app
+    environment:
+      DB_DSN: ${CURRENCE_COURSE_DB_DSN:-postgresql+asyncpg://postgres:postgres@database:5432/currency_course}
     depends_on:
       - database
-    command: ["currency_course", "run"]
-    healthcheck:
-      test: curl --fail http://localhost:8000/health
+    command: bash -c "sleep 20 && poetry run python -m raterover currency_course database migrations apply && poetry run python -m raterover currency_course run"
+
     ports:
       - 7777:8000
 
 volumes:
   postgresdata:
+

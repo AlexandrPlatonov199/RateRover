@@ -4,22 +4,21 @@ import fastapi
 from facet import ServiceMixin
 
 from raterover.common.api.service import BaseAPIService
-# from raterover.common.utils.package import get_version
-from raterover.currency_course.database.service import CurrencyCourseDatabaseService
-from raterover.currency_course.settings import CurrencyCourseSettings
+from raterover.common.utils.package import get_version
+from raterover.currency_course.database.service import CourseDatabaseService
+from raterover.currency_course.settings import CourseSettings
 
 from . import health, router
-from ..broker.producer_service import CourseBrokerProducerService
+
 
 from ...common.request_course import RequestService
 
 
-class CurrencyCourseAPIService(BaseAPIService):
+class CourseAPIService(BaseAPIService):
     def __init__(
             self,
-            database: CurrencyCourseDatabaseService,
+            database: CourseDatabaseService,
             request_service: RequestService,
-            broker_producer: CourseBrokerProducerService,
             version: str = "0.0.0",
             port: int = 8000,
             root_url: str = "http://localhost",
@@ -29,7 +28,6 @@ class CurrencyCourseAPIService(BaseAPIService):
     ):
         self._database = database
         self._request_service = request_service
-        self._broker_producer = broker_producer
 
         super().__init__(
             title="Course",
@@ -52,29 +50,25 @@ class CurrencyCourseAPIService(BaseAPIService):
         ]
 
     @property
-    def database(self) -> CurrencyCourseDatabaseService:
+    def database(self) -> CourseDatabaseService:
         return self._database
 
     @property
     def request_service(self) -> RequestService:
         return self._request_service
 
-    @property
-    def broker_producer(self) -> CourseBrokerProducerService:
-        return self._broker_producer
+
 
 
 def get_service(
-        database: CurrencyCourseDatabaseService,
-        settings: CurrencyCourseSettings,
+        database: CourseDatabaseService,
+        settings: CourseSettings,
         request_service: RequestService,
-        broker_producer: CourseBrokerProducerService,
-) -> CurrencyCourseAPIService:
-    return CurrencyCourseAPIService(
+) -> CourseAPIService:
+    return CourseAPIService(
         database=database,
         request_service=request_service,
-        broker_producer=broker_producer,
-        version="0.0.0",
+        version=get_version() or "0.0.0",
         port=settings.port,
         root_url=str(settings.root_url),
         root_path=settings.root_path,

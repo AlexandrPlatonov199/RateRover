@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "raterover"
-version = "0.1.0"
+version = "v1"
 description = ""
 authors = ["Alexander Platonov <sasa20sasha19910@yandex.ru>"]
 readme = "README.md"
@@ -26,6 +26,7 @@ backoff = "^2.2.1"
 httpx = "^0.26.0"
 python-multipart = "^0.0.7"
 aiormq = "^6.8.0"
+locust = "^2.22.0"
 
 [tool.poetry.extras]
 postgres = ["asyncpg"]

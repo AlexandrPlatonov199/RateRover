@@ -1,45 +1,26 @@
 from facet import ServiceMixin
 
-from .api.service import CurrencyCourseAPIService
-from .broker.consumer_service import CourseBrokerConsumerService
-from .broker.producer_service import CourseBrokerProducerService
+from .api.service import CourseAPIService
 
 
-class CurrencyCourseService(ServiceMixin):
+class CourseService(ServiceMixin):
     def __init__(self,
-                 api: CurrencyCourseAPIService,
-                 broker_producer: CourseBrokerProducerService,
-                 broker_consumer: CourseBrokerConsumerService,
+                 api: CourseAPIService,
                  ):
         self._api = api
-        self._broker_producer = broker_producer
-        self._broker_consumer = broker_consumer
 
     @property
     def dependencies(self) -> list[ServiceMixin]:
         return [
             self._api,
-            self._broker_producer,
-            self._broker_consumer,
         ]
 
     @property
-    def api(self) -> CurrencyCourseAPIService:
+    def api(self) -> CourseAPIService:
         return self._api
 
-    @property
-    def broker_producer(self) -> CourseBrokerProducerService:
-        return self._broker_producer
 
-    @property
-    def broker_consumer(self) -> CourseBrokerConsumerService:
-        return self._broker_consumer
+def get_service(api: CourseAPIService,
+                ) -> CourseService:
+    return CourseService(api=api)
 
-
-def get_service(api: CurrencyCourseAPIService,
-                broker_producer: CourseBrokerProducerService,
-                broker_consumer: CourseBrokerConsumerService,
-                ) -> CurrencyCourseService:
-    return CurrencyCourseService(api=api,
-                                 broker_producer=broker_producer,
-                                 broker_consumer=broker_consumer)

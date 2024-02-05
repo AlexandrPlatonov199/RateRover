@@ -1,17 +1,16 @@
 import pathlib
 from contextlib import asynccontextmanager
-from typing import Type
 
-from sqlalchemy import select, insert
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from raterover.common.database.service import BaseDatabaseService
-from .models import CurrencyCourse
+from .models import Course
 
-from raterover.currency_course.settings import CurrencyCourseSettings
+from raterover.currency_course.settings import CourseSettings
 
 
-class CurrencyCourseDatabaseService(BaseDatabaseService):
+class CourseDatabaseService(BaseDatabaseService):
     def get_alembic_config_path(self) -> pathlib.Path:
         return pathlib.Path(__file__).parent / "migrations"
 
@@ -24,9 +23,9 @@ class CurrencyCourseDatabaseService(BaseDatabaseService):
     async def get_course(self,
                          session: AsyncSession,
                          base_symbol: str,
-                         ) -> CurrencyCourse | None:
+                         ) -> Course | None:
 
-        stmt = select(CurrencyCourse).filter_by(direction=base_symbol)
+        stmt = select(Course).filter_by(direction=base_symbol)
         result = await session.execute(stmt)
         course = result.unique().scalar_one_or_none()
 
@@ -37,17 +36,17 @@ class CurrencyCourseDatabaseService(BaseDatabaseService):
                             exchanger: str,
                             direction: str,
                             value: float,
-                            ) -> CurrencyCourse:
+                            ) -> Course:
 
         existing_course = await session.execute(
-            select(CurrencyCourse).filter_by(exchanger=exchanger, direction=direction)
+            select(Course).filter_by(exchanger=exchanger, direction=direction)
         )
         existing_course = existing_course.scalar_one_or_none()
 
         if existing_course:
             existing_course.value = value
         else:
-            existing_course = CurrencyCourse(exchanger=exchanger,
+            existing_course = Course(exchanger=exchanger,
                                              direction=direction,
                                              value=value)
 
@@ -57,5 +56,5 @@ class CurrencyCourseDatabaseService(BaseDatabaseService):
         return existing_course
 
 
-def get_service(settings: CurrencyCourseSettings) -> CurrencyCourseDatabaseService:
-    return CurrencyCourseDatabaseService(dsn=str(settings.db_dsn))
+def get_service(settings: CourseSettings) -> CourseDatabaseService:
+    return CourseDatabaseService(dsn=str(settings.db_dsn))

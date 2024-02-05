@@ -23,3 +23,43 @@ And install all Python requirements:
 ```shell
 poetry install --all-extras
 ```
+
+## Run
+
+### Run: Docker
+
+Copy `.env.example` to `.env`
+```shell
+cp .env.example .env
+```
+
+For running
+
+```shell
+docker build .
+```
+
+```shell
+docker compose build
+```
+
+```shell
+docker compose up 
+```
+
+Make requests
+
+http://localhost:7777/docs#/Course/get_course_api_v1_course__get
+
+
+### Run: Python
+
+For running separate services, please, see documentation:
+1. [Currency_course](reterover/currency_course/README.md)
+
+
+### Test
+
+<p align="center">
+  <img src="static\skrin.png" align="center"/>
+</p>

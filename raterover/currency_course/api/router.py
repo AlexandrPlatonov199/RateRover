@@ -1,8 +1,10 @@
 import fastapi
 
 from . import rest
+from ...common.utils.package import get_version
 
 router = fastapi.APIRouter()
 
-router.include_router(rest.router, prefix="/rest")
+version = get_version()
+router.include_router(rest.router, prefix=f"/{version}")
 

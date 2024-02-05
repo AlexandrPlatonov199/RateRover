@@ -7,7 +7,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class CurrencyCourse(Base):
+class Course(Base):
     __tablename__ = 'currency_courses'
 
     id: Mapped[int] = mapped_column(primary_key=True)
