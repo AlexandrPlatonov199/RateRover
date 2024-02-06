@@ -156,7 +156,7 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
         return usdt_rub_exchange_rate
 
     async def start(self):
-        logger.info("Starting  Binance service")
+        logger.info("Starting Binance service")
         await self.binance_websocket()
 
 

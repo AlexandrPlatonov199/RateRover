@@ -32,6 +32,8 @@ Copy `.env.example` to `.env`
 ```shell
 cp .env.example .env
 ```
+Go to the website https://www.exchangerate-api.com/, 
+create a free key, and specify it in the .env file as API_KEY_EXCHANGE=
 
 For running
 

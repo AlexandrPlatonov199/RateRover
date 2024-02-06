@@ -4,25 +4,22 @@ from raterover.common.api.settings import BaseAPISettings
 
 
 from raterover.common.database.settings import BaseDatabaseSettings
+from .config import settings
 
 
 class CourseSettings(
     BaseAPISettings,
     BaseDatabaseSettings,
 ):
-    url_exchange: str = "https://open.er-api.com/v6/latest/USD"
+    url_exchange: str = settings.URL_EXCHANGE
 
-    btc_uri: str = "wss://stream.binance.com:9443/ws/btcusdt@trade"
+    btc_uri: str = settings.BTC_URI
 
-    eth_uri: str = "wss://stream.binance.com:9443/ws/ethusdt@trade"
+    print(f"btc_uribtc_uribtc_uri {btc_uri}")
 
-    api_key_exchange: str = "0cfb8c9c7ef4aee82c72de7e"
+    eth_uri: str = settings.ETH_URI
 
-    producer_servers: str = "amqp://guest:guest@localhost/"
-
-    uri_binance: str = "https://api.binance.com/api/v3/ticker/price"
-
-    uri_coingecko: str = "https://api.coingecko.com/api/v3/simple/price"
+    api_key_exchange: str = settings.API_KEY_EXCHANGE
 
     db_dsn: AnyUrl = AnyUrl("postgresql+asyncpg://postgres:postgres@localhost:5432/currency_course")
 
