@@ -57,7 +57,7 @@ http://localhost:7777/docs#/Course/get_course_api_v1_course__get
 ### Run: Python
 
 For running separate services, please, see documentation:
-1. [Currency_course](reterover/currency_course/README.md)
+1. [Currency_course](raterover/currency_course/README.md)
 
 
 ### Test
