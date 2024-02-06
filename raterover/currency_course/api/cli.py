@@ -5,9 +5,7 @@ from loguru import logger
 
 from raterover.currency_course import database
 from raterover.currency_course.settings import CourseSettings
-
 from .service import get_service
-from ...common.request_course import get_request_service
 
 
 @logger.catch
@@ -15,11 +13,9 @@ def run(ctx: typer.Context):
     settings: CourseSettings = ctx.obj["settings"]
     loop = asyncio.get_event_loop()
     database_service = database.get_service(settings=settings)
-    request_service = get_request_service(settings=settings)
     api_service = get_service(
         database=database_service,
         settings=settings,
-        request_service=request_service,
     )
 
     loop.run_until_complete(api_service.run())

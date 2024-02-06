@@ -18,7 +18,7 @@ services:
       DB_DSN: ${CURRENCE_COURSE_DB_DSN:-postgresql+asyncpg://postgres:postgres@database:5432/currency_course}
     depends_on:
       - database
-    command: bash -c "sleep 20 && poetry run python -m raterover currency_course database migrations apply && poetry run python -m raterover currency_course run"
+    command: bash -c "sleep 30 && poetry run python -m raterover currency_course database migrations apply && poetry run python -m raterover currency_course run"
 
     ports:
       - 7777:8000

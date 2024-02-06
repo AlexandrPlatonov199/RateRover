@@ -1,25 +1,12 @@
-from pydantic import BaseModel
 import enum
 
 
-class BaseSymbol(str, enum.Enum):
-    BTC = "BTC"
-    ETH = "ETH"
+class BaseCourse(str, enum.Enum):
+    BTC_USD = "BTC-USD"
+    BTC_RUB = "BTC-RUB"
+    ETH_USD = "ETH-USD"
+    ETH_RUB = "ETH-RUB"
 
-
-class CurrencyPair(str, enum.Enum):
-    RUB = "RUB"
-    USD = "USD"
-
-
-class Course(BaseModel):
-    direction: str
-    value: float
-
-
-class CourseResponseModel(BaseModel):
-    exchanger: str
-    courses: list[Course]
 
 
 

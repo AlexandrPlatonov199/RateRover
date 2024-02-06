@@ -22,14 +22,14 @@ class CourseDatabaseService(BaseDatabaseService):
 
     async def get_course(self,
                          session: AsyncSession,
-                         base_symbol: str,
-                         ) -> Course | None:
+                         course: str,
+                         ) -> Course:
 
-        stmt = select(Course).filter_by(direction=base_symbol)
+        stmt = select(Course).where(Course.direction == course)
         result = await session.execute(stmt)
-        course = result.unique().scalar_one_or_none()
+        db_course = result.scalars().first()
 
-        return course
+        return db_course
 
     async def create_course(self,
                             session: AsyncSession,

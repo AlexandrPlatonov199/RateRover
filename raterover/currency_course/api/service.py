@@ -11,14 +11,10 @@ from raterover.currency_course.settings import CourseSettings
 from . import health, router
 
 
-from ...common.request_course import RequestService
-
-
 class CourseAPIService(BaseAPIService):
     def __init__(
             self,
             database: CourseDatabaseService,
-            request_service: RequestService,
             version: str = "0.0.0",
             port: int = 8000,
             root_url: str = "http://localhost",
@@ -27,7 +23,6 @@ class CourseAPIService(BaseAPIService):
 
     ):
         self._database = database
-        self._request_service = request_service
 
         super().__init__(
             title="Course",
@@ -46,28 +41,19 @@ class CourseAPIService(BaseAPIService):
     def dependencies(self) -> list[ServiceMixin]:
         return [
             self._database,
-            self._request_service,
         ]
 
     @property
     def database(self) -> CourseDatabaseService:
         return self._database
 
-    @property
-    def request_service(self) -> RequestService:
-        return self._request_service
-
-
-
 
 def get_service(
         database: CourseDatabaseService,
         settings: CourseSettings,
-        request_service: RequestService,
 ) -> CourseAPIService:
     return CourseAPIService(
         database=database,
-        request_service=request_service,
         version=get_version() or "0.0.0",
         port=settings.port,
         root_url=str(settings.root_url),

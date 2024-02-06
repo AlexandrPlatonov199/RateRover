@@ -3,11 +3,12 @@ import asyncio
 import typer
 from loguru import logger
 
-from . import api, database
+from . import api, database, binance
 
 from .service import get_service
 from .settings import CourseSettings, get_settings
-from ..common.request_course import get_request_service
+
+
 
 
 @logger.catch
@@ -16,13 +17,14 @@ def run(ctx: typer.Context):
 
     loop = asyncio.get_event_loop()
     database_service = database.get_service(settings=settings)
-    request_service = get_request_service(settings=settings)
+
+    binance_course = binance.get_binan(settings=settings, database=database_service)
     api_service = api.get_service(
         database=database_service,
         settings=settings,
-        request_service=request_service,
     )
-    currency_course_service = get_service(api=api_service)
+    currency_course_service = get_service(api=api_service,
+                                          binance_course=binance_course)
 
     loop.run_until_complete(currency_course_service.run())
 
