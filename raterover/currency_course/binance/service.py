@@ -6,6 +6,7 @@ import websockets
 from facet import ServiceMixin
 from loguru import logger
 
+from raterover.currency_course.broker.producer_service import CourseProducerBrokerService
 from raterover.currency_course.database.service import CourseDatabaseService
 from raterover.currency_course.settings import CourseSettings
 
@@ -17,12 +18,15 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
                  api_key_exchange: str,
                  url_exchange: str,
                  database: CourseDatabaseService,
+                 broker_producer: CourseProducerBrokerService,
                  verify: bool = True):
         self._btc_uri = btc_uri
         self._eth_uri = eth_uri
         self._database = database
+        self._broker_producer = broker_producer
         self._api_key_exchange = api_key_exchange
         self._url_exchange = url_exchange
+
 
         super().__init__(verify=verify)
 
@@ -105,37 +109,45 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
                     else:
                         logger.error("Failed to fetch USDT/RUB exchange rate.")
 
-                    async with self._database.transaction() as session:
-                        await self._database.create_course(
-                            session=session,
-                            exchanger='binance',
-                            direction='BTC-USD',
-                            value=btc_usdt_price
-                        )
+                    data = {
+                        "exchanger": "binance",
+                        "direction": "BTC-USD",
+                        "value": btc_usdt_price,
+                    }
 
-                    async with self._database.transaction() as session:
-                        await self._database.create_course(
-                            session=session,
-                            exchanger='binance',
-                            direction='BTC-RUB',
-                            value=btc_rub_price
-                        )
+                    await self._broker_producer.send_message(queue="course_binance", message=data)
 
-                    async with self._database.transaction() as session:
-                        await self._database.create_course(
-                            session=session,
-                            exchanger='binance',
-                            direction='ETH-USD',
-                            value=eth_usdt_price
-                        )
-
-                    async with self._database.transaction() as session:
-                        await self._database.create_course(
-                            session=session,
-                            exchanger='binance',
-                            direction='ETH-RUB',
-                            value=eth_rub_price
-                        )
+                    # async with self._database.transaction() as session:
+                    #     await self._database.create_course(
+                    #         session=session,
+                    #         exchanger='binance',
+                    #         direction='BTC-USD',
+                    #         value=btc_usdt_price
+                    #     )
+                    #
+                    # async with self._database.transaction() as session:
+                    #     await self._database.create_course(
+                    #         session=session,
+                    #         exchanger='binance',
+                    #         direction='BTC-RUB',
+                    #         value=btc_rub_price
+                    #     )
+                    #
+                    # async with self._database.transaction() as session:
+                    #     await self._database.create_course(
+                    #         session=session,
+                    #         exchanger='binance',
+                    #         direction='ETH-USD',
+                    #         value=eth_usdt_price
+                    #     )
+                    #
+                    # async with self._database.transaction() as session:
+                    #     await self._database.create_course(
+                    #         session=session,
+                    #         exchanger='binance',
+                    #         direction='ETH-RUB',
+                    #         value=eth_rub_price
+                    #     )
 
                     await asyncio.sleep(5)
 
@@ -160,12 +172,15 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
         await self.binance_websocket()
 
 
-def get_binan(settings: CourseSettings,
-              database: CourseDatabaseService,
+def get_binan(
+        settings: CourseSettings,
+        database: CourseDatabaseService,
+        broker_producer: CourseProducerBrokerService,
               ) -> BinanceCourseService:
     return BinanceCourseService(btc_uri=settings.btc_uri,
                                 eth_uri=settings.eth_uri,
                                 url_exchange=settings.url_exchange,
                                 api_key_exchange=settings.api_key_exchange,
                                 database=database,
+                                broker_producer=broker_producer,
                                 )
