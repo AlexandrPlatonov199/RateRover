@@ -3,6 +3,7 @@ import asyncio
 import typer
 from loguru import logger
 
+from raterover.currency_course.broker.producer_service import get_service as get_broker_producer_service
 from raterover.currency_course import database
 from raterover.currency_course.settings import CourseSettings
 from .service import get_service
@@ -13,9 +14,11 @@ def run(ctx: typer.Context):
     settings: CourseSettings = ctx.obj["settings"]
     loop = asyncio.get_event_loop()
     database_service = database.get_service(settings=settings)
+    broker_producer_service = get_broker_producer_service(loop=loop, settings=settings)
     api_service = get_service(
         database=database_service,
         settings=settings,
+        broker_producer_service=broker_producer_service,
     )
 
     loop.run_until_complete(api_service.run())

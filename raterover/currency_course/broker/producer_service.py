@@ -1,5 +1,6 @@
 import asyncio
 
+from raterover.common.broker.models.models import CourseMessageModel
 from raterover.common.broker.service import BaseBrokerProducerService
 from raterover.currency_course.settings import CourseSettings
 
@@ -7,10 +8,11 @@ from raterover.currency_course.settings import CourseSettings
 class CourseProducerBrokerService(BaseBrokerProducerService):
 
     async def send_message(self,
-                           queue,
+                           exchange_name,
                            message,
                            ):
-        await self.send(queue=queue, message=message)
+        message_data = CourseMessageModel(**message)
+        await self.send(exchange_name=exchange_name, routing_key="", message=message_data)
 
 
 def get_service(

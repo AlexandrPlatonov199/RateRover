@@ -9,12 +9,14 @@ from raterover.currency_course.database.service import CourseDatabaseService
 from raterover.currency_course.settings import CourseSettings
 
 from . import health, router
+from ..broker.producer_service import CourseProducerBrokerService
 
 
 class CourseAPIService(BaseAPIService):
     def __init__(
             self,
             database: CourseDatabaseService,
+            broker_producer_service: CourseProducerBrokerService,
             version: str = "0.0.0",
             port: int = 8000,
             root_url: str = "http://localhost",
@@ -23,6 +25,7 @@ class CourseAPIService(BaseAPIService):
 
     ):
         self._database = database
+        self._broker_producer_service = broker_producer_service
 
         super().__init__(
             title="Course",
@@ -41,19 +44,27 @@ class CourseAPIService(BaseAPIService):
     def dependencies(self) -> list[ServiceMixin]:
         return [
             self._database,
+            self._broker_producer_service,
         ]
 
     @property
     def database(self) -> CourseDatabaseService:
         return self._database
 
+    @property
+    def broker_producer_service(self) -> CourseProducerBrokerService:
+        return self._broker_producer_service
+
+
 
 def get_service(
         database: CourseDatabaseService,
         settings: CourseSettings,
+        broker_producer_service: CourseProducerBrokerService,
 ) -> CourseAPIService:
     return CourseAPIService(
         database=database,
+        broker_producer_service=broker_producer_service,
         version=get_version() or "0.0.0",
         port=settings.port,
         root_url=str(settings.root_url),

@@ -11,13 +11,29 @@ services:
       test: ["CMD-SHELL", "pg_isready"]
 
 
+  rabbitmq:
+    image: "rabbitmq:3.9.17-management"
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    ports:
+      - "5672:5672"  # порт для AMQP протокола
+      - "15672:15672"  # порт для веб-интерфейса
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+
   currency_course:
     build: .
     container_name: currency_course_app
     environment:
       DB_DSN: ${CURRENCE_COURSE_DB_DSN:-postgresql+asyncpg://postgres:postgres@database:5432/currency_course}
+      PRODUCER_SERVERS: "amqp://guest:guest@rabbitmq:5672/"
+
     depends_on:
       - database
+      - rabbitmq
     command: bash -c "sleep 30 && poetry run python -m raterover currency_course database migrations apply && poetry run python -m raterover currency_course run"
 
     ports:

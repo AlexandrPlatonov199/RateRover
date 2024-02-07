@@ -23,7 +23,7 @@ class CourseSettings(
 
     db_dsn: AnyUrl = AnyUrl("postgresql+asyncpg://postgres:postgres@localhost:5432/currency_course")
 
-    producer_servers: str = "amqp://guest:guest@localhost/"
+    producer_servers: str = "amqp://guest:guest@localhost:5672/"
 
 def get_settings() -> CourseSettings:
     return CourseSettings()

@@ -24,6 +24,7 @@ def run(ctx: typer.Context):
     api_service = api.get_service(
         database=database_service,
         settings=settings,
+        broker_producer_service=broker_producer_service,
     )
     currency_course_service = get_service(api=api_service,
                                           binance_course=binance_course,

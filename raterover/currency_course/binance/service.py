@@ -115,7 +115,7 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
                         "value": btc_usdt_price,
                     }
 
-                    await self._broker_producer.send_message(queue="course_binance", message=data)
+                    await self._broker_producer.send_message(exchange_name="course_binance", message=data)
 
                     # async with self._database.transaction() as session:
                     #     await self._database.create_course(

@@ -2,6 +2,7 @@ import asyncio
 import json
 
 from typing import Iterable
+from uuid import uuid4
 
 import aio_pika
 import backoff
@@ -10,6 +11,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from .handler import BaseBrokerHandler
+from .models.models import CourseMessageModel
 
 
 class BaseBrokerConsumerService(ServiceMixin):
@@ -64,14 +66,24 @@ class BaseBrokerProducerService(ServiceMixin):
         self._loop = loop
         self._amqp_url = amqp_url
 
-    async def send(self, queue: str, message):
-        payload = json.dumps(message).encode()
+    def create_message(data: bytes,):
+        return aio_pika.Message(
+            body=data,
+            content_type="application/json",
+            content_encoding="utf-8",
+            message_id=uuid4().hex,
+            delivery_mode=aio_pika.abc.DeliveryMode.PERSISTENT,
+        )
+
+    async def send(self, exchange_name: str, routing_key: str, message: BaseModel):
+
+        payload = message.json().encode()
 
         async with self._connection.channel() as channel:
-            queue = await channel.declare_queue(queue)
-            await queue.publish(aio_pika.Message(payload))
+            exchange = await channel.declare_exchange(exchange_name, type="direct")
+            await exchange.publish(aio_pika.Message(payload), routing_key=routing_key)
 
-        logger.debug("Sent message to queue '{}'", queue)
+        logger.debug("Sent message to exchange '{}', routing_key '{}'", exchange_name, routing_key)
 
     async def start(self):
         logger.info("Starting RabbitMQ Producer service")
