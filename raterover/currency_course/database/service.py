@@ -47,8 +47,8 @@ class CourseDatabaseService(BaseDatabaseService):
             existing_course.value = value
         else:
             existing_course = Course(exchanger=exchanger,
-                                             direction=direction,
-                                             value=value)
+                                     direction=direction,
+                                     value=value)
 
         session.add(existing_course)
         await session.commit()

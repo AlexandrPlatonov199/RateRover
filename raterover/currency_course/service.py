@@ -2,6 +2,7 @@ from facet import ServiceMixin
 
 from .api.service import CourseAPIService
 from .binance.service import BinanceCourseService
+from .broker.consumer_service import CourseConsumerBrokerService
 from .broker.producer_service import CourseProducerBrokerService
 from ..common.broker.service import BaseBrokerProducerService
 
@@ -11,10 +12,12 @@ class CourseService(ServiceMixin):
                  api: CourseAPIService,
                  binance_course: BinanceCourseService,
                  broker_producer: CourseProducerBrokerService,
+                 broker_consumer: CourseConsumerBrokerService,
                  ):
         self._api = api
         self._binance_course = binance_course
         self._broker_producer = broker_producer
+        self._broker_consumer = broker_consumer
 
     @property
     def dependencies(self) -> list[ServiceMixin]:
@@ -22,6 +25,7 @@ class CourseService(ServiceMixin):
             self._api,
             self._binance_course,
             self._broker_producer,
+            self._broker_consumer,
         ]
 
     @property
@@ -36,13 +40,22 @@ class CourseService(ServiceMixin):
     def broker_producer(self) -> CourseProducerBrokerService:
         return self._broker_producer
 
+    @property
+    def broker_consumer(self) -> CourseConsumerBrokerService:
+        return self._broker_consumer
 
-def get_service(api: CourseAPIService,
-                binance_course: BinanceCourseService,
-                broker_producer: CourseProducerBrokerService,
+
+def get_service(
+        api: CourseAPIService,
+        binance_course: BinanceCourseService,
+        broker_producer: CourseProducerBrokerService,
+        broker_consumer: CourseConsumerBrokerService,
                 ) -> CourseService:
-    return CourseService(api=api,
-                         binance_course=binance_course,
-                         broker_producer=broker_producer,
-                         )
+    return CourseService(
+        api=api,
+        binance_course=binance_course,
+        broker_producer=broker_producer,
+        broker_consumer=broker_consumer,
+    )
+
 

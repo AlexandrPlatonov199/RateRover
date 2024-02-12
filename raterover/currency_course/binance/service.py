@@ -27,63 +27,7 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
         self._api_key_exchange = api_key_exchange
         self._url_exchange = url_exchange
 
-
         super().__init__(verify=verify)
-
-
-    async def coingecko_api(self):
-        coins = ['bitcoin', 'ethereum']
-        currencies = 'usd,rub'
-
-        while True:
-            for coin_id in coins:
-                crypto_data = await self.get_crypto_data(coin_id, currencies)
-
-                if crypto_data and coin_id in crypto_data:
-                    usd_price = crypto_data[coin_id].get('usd')
-                    rub_price = crypto_data[coin_id].get('rub')
-
-                    if coin_id == "bitcoin":
-                        coin_id = "btc"
-
-                    if usd_price is not None:
-                        # Сохранение курса BTC/USD в базе данных
-                        async with self._database.transaction() as session:
-                            await self._database.create_course(
-                                session=session,
-                                exchanger='coingecko',
-                                direction=f"{coin_id.upper()[:3]}-USD",
-                                value=usd_price
-                            )
-
-                    if rub_price is not None:
-                        # Сохранение курса BTC/RUB в базе данных
-                        async with self._database.transaction() as session:
-                            await self._database.create_course(
-                                session=session,
-                                exchanger='coingecko',
-                                direction=f"{coin_id.upper()[:3]}-RUB",
-                                value=rub_price
-                            )
-                else:
-                    logger.error("Failed to fetch {} data", coin_id.capitalize())
-                    logger.info("Switching to Binance...")
-                    await self.binance_websocket()
-
-            await asyncio.sleep(5)
-
-    async def get_crypto_data(self, coin_id, vs_currencies):
-        try:
-            url = f'https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies={vs_currencies}'
-            response = await self.get(url=url)
-            data = response.json()
-
-            # Возвращаем данные в нужном формате
-            return data
-        except Exception as e:
-            logger.exception("An unexpected error occurred: {}", e)
-            logger.info("Switching to Binance...")
-            await self.binance_websocket()
 
     async def binance_websocket(self):
         try:
@@ -109,45 +53,34 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
                     else:
                         logger.error("Failed to fetch USDT/RUB exchange rate.")
 
-                    data = {
+                    data_bts_usd = {
                         "exchanger": "binance",
                         "direction": "BTC-USD",
                         "value": btc_usdt_price,
                     }
 
-                    await self._broker_producer.send_message(exchange_name="course_binance", message=data)
+                    data_bts_rub = {
+                        "exchanger": "binance",
+                        "direction": "BTC-RUB",
+                        "value": btc_rub_price,
+                    }
 
-                    # async with self._database.transaction() as session:
-                    #     await self._database.create_course(
-                    #         session=session,
-                    #         exchanger='binance',
-                    #         direction='BTC-USD',
-                    #         value=btc_usdt_price
-                    #     )
-                    #
-                    # async with self._database.transaction() as session:
-                    #     await self._database.create_course(
-                    #         session=session,
-                    #         exchanger='binance',
-                    #         direction='BTC-RUB',
-                    #         value=btc_rub_price
-                    #     )
-                    #
-                    # async with self._database.transaction() as session:
-                    #     await self._database.create_course(
-                    #         session=session,
-                    #         exchanger='binance',
-                    #         direction='ETH-USD',
-                    #         value=eth_usdt_price
-                    #     )
-                    #
-                    # async with self._database.transaction() as session:
-                    #     await self._database.create_course(
-                    #         session=session,
-                    #         exchanger='binance',
-                    #         direction='ETH-RUB',
-                    #         value=eth_rub_price
-                    #     )
+                    data_eth_usd = {
+                        "exchanger": "binance",
+                        "direction": "ETH-USD",
+                        "value": eth_usdt_price,
+                    }
+
+                    data_eth_rub = {
+                        "exchanger": "binance",
+                        "direction": "ETH-RUB",
+                        "value": eth_rub_price,
+                    }
+
+                    data = [data_bts_usd, data_bts_rub, data_eth_usd, data_eth_rub]
+
+                    for course_data in data:
+                        await self._broker_producer.send_message(message=course_data, routing_key="binance")
 
                     await asyncio.sleep(5)
 
@@ -166,6 +99,57 @@ class BinanceCourseService(httpx.AsyncClient, ServiceMixin):
         usdt_rub_exchange_rate = data['rates']['RUB']
 
         return usdt_rub_exchange_rate
+
+    async def coingecko_api(self):
+        coins = ['bitcoin', 'ethereum']
+        currencies = 'usd,rub'
+
+        while True:
+            for coin_id in coins:
+                crypto_data = await self.get_crypto_data(coin_id, currencies)
+
+                if crypto_data and coin_id in crypto_data:
+                    usd_price = crypto_data[coin_id].get('usd')
+                    rub_price = crypto_data[coin_id].get('rub')
+
+                    if coin_id == "bitcoin":
+                        coin_id = "btc"
+
+                    if usd_price is not None:
+                        data_course = {
+                            "exchanger": "coingecko",
+                            "direction": f"{coin_id.upper()[:3]}-USD",
+                            "value": float(usd_price),
+                        }
+
+                        await self._broker_producer.send_message(message=data_course, routing_key="coingecko")
+
+                    if rub_price is not None:
+                        data_course = {
+                            "exchanger": "coingecko",
+                            "direction": f"{coin_id.upper()[:3]}-RUB",
+                            "value": float(rub_price),
+                        }
+
+                        await self._broker_producer.send_message(message=data_course, routing_key="coingecko")
+                else:
+                    logger.error("Failed to fetch {} data", coin_id.capitalize())
+                    logger.info("Switching to Binance...")
+                    await self.binance_websocket()
+
+            await asyncio.sleep(5)
+
+    async def get_crypto_data(self, coin_id, vs_currencies):
+        try:
+            url = f'https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies={vs_currencies}'
+            response = await self.get(url=url)
+            data = response.json()
+
+            return data
+        except Exception as e:
+            logger.exception("An unexpected error occurred: {}", e)
+            logger.info("Switching to Binance...")
+            await self.binance_websocket()
 
     async def start(self):
         logger.info("Starting Binance service")

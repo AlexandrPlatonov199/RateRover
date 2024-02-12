@@ -2,10 +2,10 @@ import asyncio
 import json
 
 from typing import Iterable
-from uuid import uuid4
+
 
 import aio_pika
-import backoff
+
 from facet import ServiceMixin
 from loguru import logger
 from pydantic import BaseModel
@@ -15,46 +15,55 @@ from .models.models import CourseMessageModel
 
 
 class BaseBrokerConsumerService(ServiceMixin):
-    def __init__(self,
-                 loop: asyncio.AbstractEventLoop,
-                 amqp_url: str,
-                 queues: Iterable[str],
-                 handlers: Iterable[BaseBrokerHandler] = ()):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        connection_string: str,
+        queue_name: str,
+        handlers: Iterable[BaseBrokerHandler] = (),
+    ):
         self._handlers = handlers
-        self._connection = None
+        self._connection_string = connection_string
+        self._queue_name = queue_name
         self._loop = loop
-        self._amqp_url = amqp_url
-        self._queues = queues
 
-    @backoff.on_exception(backoff.expo, Exception)
     async def consume(self):
-        async with self._connection.channel() as channel:
-            for queue_name in self._queues:
-                queue = await channel.declare_queue(queue_name)
-                await queue.consume(self.handle)
+        connection = await aio_pika.connect(self._connection_string, loop=self._loop)
 
-        logger.info("Started consuming from queues: {}", self._queues)
 
-    async def handle(self, message: aio_pika.IncomingMessage):
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
+
+        queue = await channel.declare_queue(
+                self._queue_name,
+                durable=False,
+
+            )
+
+        await queue.consume(self.on_message)
+
+        print(" [*] Waiting for messages. To exit press CTRL+C")
+
+    async def on_message(self, message: aio_pika.abc.AbstractIncomingMessage):
         async with message.process():
-            for handler in self._handlers:
-                if not await handler.check(message=message):
-                    logger.debug("Skip message from queue '{}': {}", message.routing_key, message.body)
-                    continue
+            await self.handle(message)
 
-                logger.debug("Handle message from queue '{}': {}", message.routing_key, message.body)
-                await handler.handle(message=message)
+    async def handle(self, message: aio_pika.abc.AbstractIncomingMessage):
+        for handler in self._handlers:
+            if not await handler.check(message=message):
+                logger.debug("Skip message from '{}': {}", self._queue_name, message.body)
+                continue
+
+            logger.debug("Handle message from '{}': {}", self._queue_name, message.body)
+            await handler.handle(message=message)
 
     async def start(self):
-        logger.info("Starting RabbitMQ Consumer service")
+        logger.info("Start Broker Consumer service")
 
-        self._connection = await aio_pika.connect_robust(self._amqp_url, loop=self._loop)
-        await self.consume()
+        self.add_task(self.consume())
 
     async def stop(self):
-        logger.info("Stopping RabbitMQ Consumer service")
-
-        await self._connection.close()
+        logger.info("Stop Broker Consumer service")
 
 
 class BaseBrokerProducerService(ServiceMixin):
@@ -66,29 +75,27 @@ class BaseBrokerProducerService(ServiceMixin):
         self._loop = loop
         self._amqp_url = amqp_url
 
-    def create_message(data: bytes,):
-        return aio_pika.Message(
-            body=data,
-            content_type="application/json",
-            content_encoding="utf-8",
-            message_id=uuid4().hex,
-            delivery_mode=aio_pika.abc.DeliveryMode.PERSISTENT,
-        )
+    async def send(self, routing_key: str, message: BaseModel):
+        self._connection = await aio_pika.connect(self._amqp_url, loop=self._loop)
 
-    async def send(self, exchange_name: str, routing_key: str, message: BaseModel):
+
+
+        channel = await self._connection.channel()
 
         payload = message.json().encode()
 
-        async with self._connection.channel() as channel:
-            exchange = await channel.declare_exchange(exchange_name, type="direct")
-            await exchange.publish(aio_pika.Message(payload), routing_key=routing_key)
+        message = aio_pika.Message(
+            payload, delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+        )
 
-        logger.debug("Sent message to exchange '{}', routing_key '{}'", exchange_name, routing_key)
+        await channel.default_exchange.publish(
+            message, routing_key=routing_key,
+            )
+
+        logger.debug("Sent message to routing_key '{}'", routing_key)
 
     async def start(self):
         logger.info("Starting RabbitMQ Producer service")
-
-        self._connection = await aio_pika.connect_robust(self._amqp_url, loop=self._loop)
 
     async def stop(self):
         logger.info("Stopping RabbitMQ Producer service")

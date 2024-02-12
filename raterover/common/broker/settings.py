@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class BaseBrokerConsumerSettings(BaseSettings):
     consumer_servers: str = ""
-    queues: list[str] = []
+    queues: str = ""
 
 
 class BaseBrokerProducerSettings(BaseSettings):

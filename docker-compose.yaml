@@ -30,11 +30,11 @@ services:
     environment:
       DB_DSN: ${CURRENCE_COURSE_DB_DSN:-postgresql+asyncpg://postgres:postgres@database:5432/currency_course}
       PRODUCER_SERVERS: "amqp://guest:guest@rabbitmq:5672/"
-
+      CONSUMER_SERVERS: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
       - database
       - rabbitmq
-    command: bash -c "sleep 30 && poetry run python -m raterover currency_course database migrations apply && poetry run python -m raterover currency_course run"
+    command: ["/app/docker/raterover.sh"]
 
     ports:
       - 7777:8000

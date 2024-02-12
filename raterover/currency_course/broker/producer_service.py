@@ -8,11 +8,11 @@ from raterover.currency_course.settings import CourseSettings
 class CourseProducerBrokerService(BaseBrokerProducerService):
 
     async def send_message(self,
-                           exchange_name,
                            message,
+                           routing_key,
                            ):
         message_data = CourseMessageModel(**message)
-        await self.send(exchange_name=exchange_name, routing_key="", message=message_data)
+        await self.send(routing_key=routing_key, message=message_data)
 
 
 def get_service(
